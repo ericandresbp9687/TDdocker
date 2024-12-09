@@ -1,0 +1,37 @@
+version: "3.8" # Define la versión de Docker Compose.
+
+services:
+  database:
+    image: postgres # Usa la imagen oficial de PostgreSQL.
+    container_name: postgres # Nombre del contenedor.
+    environment: # Variables de entorno para configurar PostgreSQL.
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql # Archivo SQL para inicializar la base de datos.
+    ports:
+      - "5432:5432" # Expone el puerto 5432 para conectarse a la base de datos.
+
+  backend:
+    build:
+      context: ./backend # Ubicación del backend.
+    container_name: backend # Nombre del contenedor del backend.
+    command: npm start # Comando para iniciar el servidor Node.js.
+    environment: # Variables necesarias para conectar al servicio database.
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=database
+      - DB_NAME=mydb
+      - DB_PORT=5432
+      - PORT=3000
+    ports:
+      - "3000:3000" # Expone el backend en el puerto 3000.
+    depends_on:
+      - database # Asegura que el backend espere a que el servicio de la base de datos esté listo.
+
+  frontend:
+    build:
+      context: ./frontend # Ubicación del frontend Angular.
+    container_name: frontend # Nombre del contenedor del frontend.
+    ports:
+      - "4200:4200" # Expone la aplicación en el puerto 4200.
